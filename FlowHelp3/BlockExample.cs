@@ -1,7 +1,6 @@
-﻿using Flow.Net.Sdk;
-using Flow.Net.Sdk.Cadence;
-using Flow.Net.Sdk.Client;
-using Flow.Net.Sdk.Models;
+﻿using Flow.Net.Sdk.Client.Grpc;
+using Flow.Net.Sdk.Core.Cadence;
+using Flow.Net.Sdk.Core.Models;
 
 namespace FlowHelp3
 {
@@ -14,26 +13,26 @@ namespace FlowHelp3
 
         public async Task RunExampleAsync()
         {
-            var client = new FlowClientAsync("access.mainnet.nodes.onflow.org:9000");
+            var client = new FlowGrpcClient("access.mainnet.nodes.onflow.org:9000");
 
             await client.PingAsync();
 
-            var latestBlock = await client.GetLatestBlockAsync();
-            ulong lastHeight = latestBlock.Height - 1;
+            var latestBlockHeader = await client.GetLatestBlockHeaderAsync();
+            ulong lastHeight = latestBlockHeader.Height - 1;
 
             while (true)
             {
                 try
                 {
-                    var block = await client.GetLatestBlockAsync();
+                    var blockHeader = await client.GetLatestBlockHeaderAsync();
 
-                    if (block.Height > lastHeight)
+                    if (blockHeader.Height > lastHeight)
                     {
-                        var events = await client.GetEventsForHeightRangeAsync(LISTING_EVENT, lastHeight + 1, block.Height);
+                        var events = await client.GetEventsForHeightRangeAsync(LISTING_EVENT, lastHeight + 1, blockHeader.Height);
 
                         PrintEvents(events);
 
-                        lastHeight = block.Height;
+                        lastHeight = blockHeader.Height;
                     }
 
                     await Task.Delay(1000);
@@ -69,7 +68,7 @@ namespace FlowHelp3
             {
                 Console.WriteLine($"Type: {@event.Type}");
                 Console.WriteLine($"Values: {@event.Payload.Encode()}");
-                Console.WriteLine($"Transaction ID: {@event.TransactionId.FromByteStringToHex()}");
+                Console.WriteLine($"Transaction ID: {@event.TransactionId}");
             }
         }
     }
